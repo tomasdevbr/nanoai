@@ -1,15 +1,22 @@
 const AI = (() => {
     async function checkSupport() {
         try {
+            if (typeof LanguageModel === 'undefined') {
+                return 'permission_needed';
+            }
+            if (LanguageModel === null) {
+                return 'unsupported';
+            }
             const availability = await LanguageModel.availability();
-            return availability !== 'no';
+            return availability !== 'no' ? 'supported' : 'permission_needed';
         } catch (error) {
-            return false;
+            return 'unsupported';
         }
     }
 
     async function generateResponse(question, onTokenCb) {
         const params = await LanguageModel.params();
+        console.log(params)
         const session = await LanguageModel.create({
             expectedInputLanguages: ["pt"],
             temperature: params.defaultTemperature,

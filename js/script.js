@@ -67,10 +67,17 @@ btn.addEventListener('click', async () => {
 });
 
 async function verifyAndHandleApiSupport() {
-    const supported = await AI.checkSupport();
-    if (supported) {
-        permissionModal.style.display = 'none';
+    const status = await AI.checkSupport();
+    const unsupportedModal = document.getElementById('unsupportedModal');
+    
+    permissionModal.style.display = 'none';
+    if (unsupportedModal) unsupportedModal.style.display = 'none';
+
+    if (status === 'supported') {
         return true;
+    } else if (status === 'unsupported') {
+        if (unsupportedModal) unsupportedModal.style.display = 'flex';
+        return false;
     } else {
         permissionModal.style.display = 'flex';
         return false;
