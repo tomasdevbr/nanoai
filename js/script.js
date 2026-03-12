@@ -2,6 +2,7 @@ const output = document.getElementById('output');
 const btn = document.getElementById('generateBtn');
 const input = document.getElementById('promptInput');
 const clearBtn = document.getElementById('clearBtn');
+const loadingIndicator = document.getElementById('loadingIndicator');
 const permissionModal = document.getElementById('permissionModal');
 const checkPermissionBtn = document.getElementById('checkPermissionBtn');
 const downloadModal = document.getElementById('downloadModal');
@@ -44,17 +45,10 @@ btn.addEventListener('click', async () => {
     }
 
     btn.disabled = true;
-
-    output.style.display = 'block';
-    output.innerHTML = `
-        <div class="loading-container">
-            <div class="brutalist-spinner"></div>
-            <span>Iniciando IA (pode baixar o modelo se for a primeira vez)</span>
-        </div>
-    `;
+    output.style.display = 'none'; // Ensure it's hidden initially
+    loadingIndicator.style.display = 'flex'; // Show our standalone spinner
 
     try {
-        let hasHiddenDownloadModal = false;
         let isDownloading = false;
 
         function formatBytes(bytes, decimals = 1) {
@@ -66,12 +60,21 @@ btn.addEventListener('click', async () => {
             return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
         }
 
+        let tokenCount = 0;
         const fullText = await AI.generateResponse(question, (text) => {
-            if (!hasHiddenDownloadModal) {
+            tokenCount++;
+            
+            if (isDownloading) {
                 downloadModal.style.display = 'none';
-                hasHiddenDownloadModal = true;
+                isDownloading = false;
             }
-            output.innerHTML = MarkdownViewer.render(text);
+
+            // Only show output card and hide spinner once we have at least 2 tokens
+            if (tokenCount >= 2) {
+                loadingIndicator.style.display = 'none';
+                output.style.display = 'block';
+                output.innerHTML = MarkdownViewer.render(text);
+            }
         }, (percentage, loaded, total) => {
             // Em caso de modelos já instalados, pequenas atualizações (ex: < 10MB) podem piscar a modal com 0.0 MB.
             // Para não incomodar a UI num download de segundos, vamos exibir a modal apenas para os downloads pesados reais.
@@ -90,12 +93,21 @@ btn.addEventListener('click', async () => {
             }
         });
 
+        // Se a geração terminar em sucesso extremamente rápido e não tivermos atingido 2 tokens
+        if (tokenCount < 2) {
+            loadingIndicator.style.display = 'none';
+            output.style.display = 'block';
+            output.innerHTML = MarkdownViewer.render(fullText);
+        }
+
         // Salvar no IndexedDB ao terminar de gerar com sucesso
         await saveConversation(question, fullText);
         HistoryUI.load(loadConversation, () => clearBtn.click());
 
     } catch (e) {
         console.error(e);
+        loadingIndicator.style.display = 'none';
+        output.style.display = 'block';
         output.innerHTML = "Erro: " + e.message;
     } finally {
         btn.disabled = false;
