@@ -4,6 +4,9 @@ const input = document.getElementById('promptInput');
 const clearBtn = document.getElementById('clearBtn');
 const permissionModal = document.getElementById('permissionModal');
 const checkPermissionBtn = document.getElementById('checkPermissionBtn');
+const downloadModal = document.getElementById('downloadModal');
+const progressBar = document.getElementById('progressBar');
+const progressLabel = document.getElementById('progressLabel');
 
 // Mostra ou esconde o botão "X" conforme a pessoa digita
 input.addEventListener('input', () => {
@@ -101,6 +104,24 @@ checkPermissionBtn.addEventListener('click', async () => {
 
 // Inicialização
 window.addEventListener('DOMContentLoaded', async () => {
-    await verifyAndHandleApiSupport();
+    const availability = await AI.getAvailability();
+
+    if (availability === 'no') {
+        permissionModal.style.display = 'flex';
+        return;
+    }
+
+    if (availability === 'after-download' || availability === 'downloading') {
+        downloadModal.style.display = 'flex';
+        try {
+            await AI.downloadModel((pct) => {
+                progressBar.style.width = pct + '%';
+                progressLabel.textContent = pct + '%';
+            });
+        } finally {
+            downloadModal.style.display = 'none';
+        }
+    }
+
     HistoryUI.load(loadConversation, () => clearBtn.click());
 });

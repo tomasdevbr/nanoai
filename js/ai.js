@@ -8,8 +8,30 @@ const AI = (() => {
         }
     }
 
+    async function getAvailability() {
+        try {
+            return await LanguageModel.availability();
+        } catch (error) {
+            return 'no';
+        }
+    }
+
+    async function downloadModel(onProgress) {
+        await LanguageModel.create({
+            monitor(m) {
+                m.addEventListener('downloadprogress', (e) => {
+                    const pct = e.total > 0 ? Math.round((e.loaded / e.total) * 100) : 0;
+                    onProgress(pct);
+                });
+            }
+        });
+    }
+
     async function generateResponse(question, onTokenCb) {
         const params = await LanguageModel.params();
+        if (!params) {
+            throw new Error("Modelo Gemini Nano ainda não está pronto. Acesse chrome://components/, procure por 'Optimization Guide On Device Model' e clique em 'Check for update'. Aguarde o download e tente novamente.");
+        }
         const session = await LanguageModel.create({
             expectedInputLanguages: ["pt"],
             temperature: params.defaultTemperature,
@@ -26,5 +48,5 @@ const AI = (() => {
         return fullText;
     }
 
-    return { checkSupport, generateResponse };
+    return { checkSupport, getAvailability, downloadModel, generateResponse };
 })();
