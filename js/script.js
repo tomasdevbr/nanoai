@@ -4,6 +4,10 @@ const input = document.getElementById('promptInput');
 const clearBtn = document.getElementById('clearBtn');
 const permissionModal = document.getElementById('permissionModal');
 const checkPermissionBtn = document.getElementById('checkPermissionBtn');
+const downloadModal = document.getElementById('downloadModal');
+const downloadPercentage = document.getElementById('downloadPercentage');
+const downloadProgress = document.getElementById('downloadProgress');
+const downloadBytes = document.getElementById('downloadBytes');
 
 // Mostra ou esconde o botão "X" conforme a pessoa digita
 input.addEventListener('input', () => {
@@ -50,8 +54,20 @@ btn.addEventListener('click', async () => {
     `;
 
     try {
+        let hasHiddenDownloadModal = false;
         const fullText = await AI.generateResponse(question, (text) => {
+            if (!hasHiddenDownloadModal) {
+                downloadModal.style.display = 'none';
+                hasHiddenDownloadModal = true;
+            }
             output.innerHTML = MarkdownViewer.render(text);
+        }, (percentage, loaded, total) => {
+            downloadModal.style.display = 'flex';
+            downloadPercentage.textContent = percentage;
+            downloadProgress.value = percentage;
+            const loadedMB = (loaded / (1024 * 1024)).toFixed(1);
+            const totalMB = (total / (1024 * 1024)).toFixed(1);
+            downloadBytes.textContent = `${loadedMB} / ${totalMB}`;
         });
 
         // Salvar no IndexedDB ao terminar de gerar com sucesso
@@ -63,6 +79,7 @@ btn.addEventListener('click', async () => {
         output.innerHTML = "Erro: " + e.message;
     } finally {
         btn.disabled = false;
+        downloadModal.style.display = 'none';
     }
 });
 

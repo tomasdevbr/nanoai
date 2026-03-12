@@ -14,7 +14,7 @@ const AI = (() => {
         }
     }
 
-    async function generateResponse(question, onTokenCb) {
+    async function generateResponse(question, onTokenCb, onDownloadProgressCb = null) {
         const session = await LanguageModel.create({
             expectedInputLanguages: ["pt"],
             temperature: 1,
@@ -24,8 +24,7 @@ const AI = (() => {
                 m.addEventListener('downloadprogress', (e) => {
                     const percentage = Math.round((e.loaded / e.total) * 100);
                     console.log(`Baixando modelo: ${percentage}% (${e.loaded} / ${e.total} bytes)`);
-                    // Se quiser mostrar na UI, você pode passar um callback extra para o generateResponse:
-                    // if (onDownloadProgressCb) onDownloadProgressCb(percentage);
+                    if (onDownloadProgressCb) onDownloadProgressCb(percentage, e.loaded, e.total);
                 });
             }
         });
