@@ -15,12 +15,10 @@ const AI = (() => {
     }
 
     async function generateResponse(question, onTokenCb) {
-        const params = await LanguageModel.params();
-        console.log(params)
         const session = await LanguageModel.create({
             expectedInputLanguages: ["pt"],
-            temperature: params.defaultTemperature,
-            topK: params.defaultTopK || 1,
+            temperature: 1,
+            topK: 1,
             initialPrompts: [{ role: 'system', content: `Você é um assistente de IA que responde de forma clara e objetiva.` }],
             monitor(m) {
                 m.addEventListener('downloadprogress', (e) => {
