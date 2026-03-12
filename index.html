@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente Web AI</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/input.css">
+    <link rel="stylesheet" href="css/output.css">
+    <link rel="stylesheet" href="css/modal.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <main class="main-container">
+            <h1>Como posso ajudar?</h1>
+
+            <div class="input-wrapper">
+                <input type="text" id="promptInput" placeholder="Pergunte alguma coisa" autocomplete="off">
+                <button id="clearBtn" aria-label="Limpar" style="display: none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+                <button id="generateBtn" aria-label="Enviar">
+                    <!-- Ícone branco similar ao da imagem (uma seta para cima ou papel) -->
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="19" x2="12" y2="5"></line>
+                        <polyline points="5 12 12 5 19 12"></polyline>
+                    </svg>
+                </button>
+            </div>
+
+            <output id="output"></output>
+        </main>
+
+        <aside class="sidebar">
+            <h2>Histórico</h2>
+            <div id="historyList">
+                <p class="empty-history">Nenhuma conversa salva ainda.</p>
+            </div>
+        </aside>
+    </div>
+
+    <div id="permissionModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>🚨 Acesso Necessário</h2>
+            <p>Para usar a inteligência artificial, você precisa ativar a flag abaixo no seu navegador Chrome:</p>
+            <div class="code-box">
+                <code>chrome://flags/#prompt-api-for-gemini-nano</code><br><br>
+            </div>
+            <p>1. Copie o link acima e cole na barra de endereços.<br>2. Altere <strong>Prompt API</strong> para
+                <strong>Enabled</strong>.<br>3. Reinicie o navegador Chrome.
+            </p>
+            <button id="checkPermissionBtn" class="primary-btn">Já ativei / Tentar novamente</button>
+        </div>
+    </div>
+
+    <!-- highlight.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
+    <!-- marked.js for markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-highlight/lib/index.umd.js"></script>
+    <!-- custom js -->
+    <script src="js/db.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/markdown.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/script.js"></script>
+</body>
+
+</html>
