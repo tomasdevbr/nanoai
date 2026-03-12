@@ -55,6 +55,7 @@ btn.addEventListener('click', async () => {
 
     try {
         let hasHiddenDownloadModal = false;
+        let isDownloading = false;
         const fullText = await AI.generateResponse(question, (text) => {
             if (!hasHiddenDownloadModal) {
                 downloadModal.style.display = 'none';
@@ -62,12 +63,18 @@ btn.addEventListener('click', async () => {
             }
             output.innerHTML = MarkdownViewer.render(text);
         }, (percentage, loaded, total) => {
-            downloadModal.style.display = 'flex';
-            downloadPercentage.textContent = percentage;
-            downloadProgress.value = percentage;
-            const loadedMB = (loaded / (1024 * 1024)).toFixed(1);
-            const totalMB = (total / (1024 * 1024)).toFixed(1);
-            downloadBytes.textContent = `${loadedMB} / ${totalMB}`;
+            if (loaded < total && total > 0) {
+                isDownloading = true;
+            }
+
+            if (isDownloading) {
+                downloadModal.style.display = 'flex';
+                downloadPercentage.textContent = percentage;
+                downloadProgress.value = percentage;
+                const loadedMB = (loaded / (1024 * 1024)).toFixed(1);
+                const totalMB = total > 0 ? (total / (1024 * 1024)).toFixed(1) : '?';
+                downloadBytes.textContent = `${loadedMB} / ${totalMB}`;
+            }
         });
 
         // Salvar no IndexedDB ao terminar de gerar com sucesso
