@@ -22,6 +22,14 @@ const AI = (() => {
             temperature: params.defaultTemperature,
             topK: params.defaultTopK || 1,
             initialPrompts: [{ role: 'system', content: `Você é um assistente de IA que responde de forma clara e objetiva.` }],
+            monitor(m) {
+                m.addEventListener('downloadprogress', (e) => {
+                    const percentage = Math.round((e.loaded / e.total) * 100);
+                    console.log(`Baixando modelo: ${percentage}% (${e.loaded} / ${e.total} bytes)`);
+                    // Se quiser mostrar na UI, você pode passar um callback extra para o generateResponse:
+                    // if (onDownloadProgressCb) onDownloadProgressCb(percentage);
+                });
+            }
         });
 
         const responseStream = await session.promptStreaming([{ role: 'user', content: question }]);
