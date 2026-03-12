@@ -56,6 +56,16 @@ btn.addEventListener('click', async () => {
     try {
         let hasHiddenDownloadModal = false;
         let isDownloading = false;
+
+        function formatBytes(bytes, decimals = 1) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
         const fullText = await AI.generateResponse(question, (text) => {
             if (!hasHiddenDownloadModal) {
                 downloadModal.style.display = 'none';
@@ -63,17 +73,20 @@ btn.addEventListener('click', async () => {
             }
             output.innerHTML = MarkdownViewer.render(text);
         }, (percentage, loaded, total) => {
-            if (loaded < total && total > 0) {
+            // Em caso de modelos já instalados, pequenas atualizações (ex: < 10MB) podem piscar a modal com 0.0 MB.
+            // Para não incomodar a UI num download de segundos, vamos exibir a modal apenas para os downloads pesados reais.
+            if (loaded < total && total > 10 * 1024 * 1024) {
                 isDownloading = true;
             }
 
             if (isDownloading) {
                 downloadModal.style.display = 'flex';
-                downloadPercentage.textContent = percentage;
-                downloadProgress.value = percentage;
-                const loadedMB = (loaded / (1024 * 1024)).toFixed(1);
-                const totalMB = total > 0 ? (total / (1024 * 1024)).toFixed(1) : '?';
-                downloadBytes.textContent = `${loadedMB} / ${totalMB}`;
+                downloadPercentage.textContent = isNaN(percentage) ? 0 : percentage;
+                downloadProgress.value = isNaN(percentage) ? 0 : percentage;
+                
+                const loadedStr = formatBytes(loaded);
+                const totalStr = total > 0 ? formatBytes(total) : '?';
+                downloadBytes.textContent = `${loadedStr} / ${totalStr}`;
             }
         });
 
