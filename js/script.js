@@ -5,10 +5,6 @@ const clearBtn = document.getElementById('clearBtn');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const permissionModal = document.getElementById('permissionModal');
 const checkPermissionBtn = document.getElementById('checkPermissionBtn');
-const downloadModal = document.getElementById('downloadModal');
-const downloadPercentage = document.getElementById('downloadPercentage');
-const downloadProgress = document.getElementById('downloadProgress');
-const downloadBytes = document.getElementById('downloadBytes');
 
 // Mostra ou esconde o botão "X" conforme a pessoa digita
 input.addEventListener('input', () => {
@@ -49,55 +45,12 @@ btn.addEventListener('click', async () => {
     loadingIndicator.style.display = 'flex'; // Show our standalone spinner
 
     try {
-        let isDownloading = false;
-        try {
-            const availability = await LanguageModel.availability();
-            isDownloading = (availability === 'after-download');
-        } catch(e) {}
 
-        function formatBytes(bytes, decimals = 1) {
-            if (!bytes || bytes === 0) return '0 B';
-            const k = 1024;
-            const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-        }
-
-        let tokenCount = 0;
         const fullText = await AI.generateResponse(question, (text) => {
-            tokenCount++;
-            
-            if (isDownloading) {
-                downloadModal.style.display = 'none';
-                isDownloading = false;
-            }
-
-            // Only show output card and hide spinner once we have at least 2 tokens
-            if (tokenCount >= 2) {
-                loadingIndicator.style.display = 'none';
-                output.style.display = 'block';
-                output.innerHTML = MarkdownViewer.render(text);
-            }
-        }, (percentage, loaded, total) => {
-            if (isDownloading) {
-                loadingIndicator.style.display = 'none'; // Esconde o spinner central de imediato
-                downloadModal.style.display = 'flex';    // Mostra a modal por cima de tudo
-                downloadPercentage.textContent = isNaN(percentage) ? 0 : percentage;
-                downloadProgress.value = isNaN(percentage) ? 0 : percentage;
-                
-                const loadedStr = formatBytes(loaded);
-                const totalStr = total > 0 ? formatBytes(total) : '?';
-                downloadBytes.textContent = `${loadedStr} / ${totalStr}`;
-            }
-        });
-
-        // Se a geração terminar em sucesso extremamente rápido e não tivermos atingido 2 tokens
-        if (tokenCount < 2) {
             loadingIndicator.style.display = 'none';
             output.style.display = 'block';
-            output.innerHTML = MarkdownViewer.render(fullText);
-        }
+            output.innerHTML = MarkdownViewer.render(text);
+        });
 
         // Salvar no IndexedDB ao terminar de gerar com sucesso
         await saveConversation(question, fullText);
@@ -110,22 +63,16 @@ btn.addEventListener('click', async () => {
         output.innerHTML = "Erro: " + e.message;
     } finally {
         btn.disabled = false;
-        downloadModal.style.display = 'none';
     }
 });
 
 async function verifyAndHandleApiSupport() {
-    const status = await AI.checkSupport();
-    const unsupportedModal = document.getElementById('unsupportedModal');
-    
-    permissionModal.style.display = 'none';
-    if (unsupportedModal) unsupportedModal.style.display = 'none';
+    const isSupported = await AI.checkSupport();
 
-    if (status === 'supported') {
+    permissionModal.style.display = 'none';
+
+    if (isSupported) {
         return true;
-    } else if (status === 'unsupported') {
-        if (unsupportedModal) unsupportedModal.style.display = 'flex';
-        return false;
     } else {
         permissionModal.style.display = 'flex';
         return false;
