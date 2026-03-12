@@ -50,6 +50,10 @@ btn.addEventListener('click', async () => {
 
     try {
         let isDownloading = false;
+        try {
+            const availability = await LanguageModel.availability();
+            isDownloading = (availability === 'after-download');
+        } catch(e) {}
 
         function formatBytes(bytes, decimals = 1) {
             if (!bytes || bytes === 0) return '0 B';
@@ -76,14 +80,9 @@ btn.addEventListener('click', async () => {
                 output.innerHTML = MarkdownViewer.render(text);
             }
         }, (percentage, loaded, total) => {
-            // Em caso de modelos já instalados, pequenas atualizações (ex: < 10MB) podem piscar a modal com 0.0 MB.
-            // Para não incomodar a UI num download de segundos, vamos exibir a modal apenas para os downloads pesados reais.
-            if (loaded < total && total > 10 * 1024 * 1024) {
-                isDownloading = true;
-            }
-
             if (isDownloading) {
-                downloadModal.style.display = 'flex';
+                loadingIndicator.style.display = 'none'; // Esconde o spinner central de imediato
+                downloadModal.style.display = 'flex';    // Mostra a modal por cima de tudo
                 downloadPercentage.textContent = isNaN(percentage) ? 0 : percentage;
                 downloadProgress.value = isNaN(percentage) ? 0 : percentage;
                 
