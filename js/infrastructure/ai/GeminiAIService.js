@@ -13,14 +13,14 @@ class GeminiAIService extends AIService {
     }
 
     async checkAvailability() {
-        debugger
         const API = await this.getAPI();
+        debugger
         if (!API) return "unavailable";
 
         try {
-            return await API.availability({
-                expectedInputs: [{ type: "text" }, { type: "image" }, { type: "audio" }]
-            });
+            const availability = await API.availability({ expectedInputs: [{ type: "text" }, { type: "image" }, { type: "audio" }] });
+            console.log(availability)
+            return availability;
         } catch (error) {
             console.error("GeminiAIService: Erro ao verificar disponibilidade", error);
             return "unavailable";
