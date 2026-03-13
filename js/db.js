@@ -82,3 +82,16 @@ async function deleteConversation(id) {
         request.onerror = (e) => reject(e.target.error);
     });
 }
+// Função para deletar todo o histórico
+async function clearAllHistory() {
+    if (!db) await initDB();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const objectStore = transaction.objectStore(STORE_NAME);
+        const request = objectStore.clear();
+
+        request.onsuccess = () => resolve();
+        request.onerror = (e) => reject(e.target.error);
+    });
+}

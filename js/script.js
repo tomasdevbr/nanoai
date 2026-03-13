@@ -5,6 +5,7 @@ const clearBtn = document.getElementById('clearBtn');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const permissionModal = document.getElementById('permissionModal');
 const checkPermissionBtn = document.getElementById('checkPermissionBtn');
+const newChatBtn = document.getElementById('newChatBtn');
 
 // Mostra ou esconde o botão "X" conforme a pessoa digita
 input.addEventListener('input', () => {
@@ -24,6 +25,24 @@ input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         btn.click();
     }
+});
+
+// Reseta a sessão da IA e limpa todo o histórico
+newChatBtn.addEventListener('click', async () => {
+    // 1. Limpa a memória da IA (sessão)
+    await AI.resetSession();
+    
+    // 2. Limpa o IndexedDB
+    await clearAllHistory();
+    
+    // 3. Atualiza a UI
+    clearBtn.click(); // Limpa o output e o campo de input principal
+    HistoryUI.load(loadConversation, () => clearBtn.click()); // Recarrega a barra lateral vazia
+    
+    input.placeholder = "Histórico e memória limpos...";
+    setTimeout(() => {
+        input.placeholder = "Pergunte alguma coisa";
+    }, 2000);
 });
 
 function loadConversation(question, answerMarkdown) {

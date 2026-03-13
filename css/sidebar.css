@@ -15,14 +15,46 @@
     flex-direction: column;
 }
 
-.sidebar h2 {
-    margin-top: 0;
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: var(--border-width) solid var(--black);
+    padding-bottom: 10px;
     margin-bottom: 20px;
+}
+
+.sidebar h2 {
+    margin: 0;
     font-size: 24px;
     font-weight: 800;
     text-transform: uppercase;
-    border-bottom: var(--border-width) solid var(--black);
-    padding-bottom: 10px;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+#newChatBtn {
+    background-color: var(--primary);
+    border: var(--border-width) solid var(--black);
+    border-radius: var(--border-radius);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 4px 4px 0px var(--black);
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+#newChatBtn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--black);
+}
+
+#newChatBtn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px var(--black);
 }
 
 .empty-history {
