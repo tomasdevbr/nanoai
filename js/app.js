@@ -1,10 +1,27 @@
 /**
- * App (Entry Point) - Inicializa os módulos e gerencia eventos globais.
+ * App (Composition Root) - Instancia e injeta dependências.
  */
 document.addEventListener('DOMContentLoaded', async () => {
-    // Inicializar Módulos
+    // 1. Instanciar Infraestrutura
+    const aiService = new GeminiAIService();
+    const historyRepo = new IndexedDBRepository();
+
+    // 2. Instanciar Views
+    const chatView = new ChatView();
+    const historyView = new HistoryView();
+    // ModalManager permanece como singleton por simplicidade no DOM
     ModalManager.init();
     
+    // 3. Instanciar Controlador (Injeção de Dependência)
+    const chatController = new ChatController(
+        aiService, 
+        historyRepo, 
+        chatView, 
+        MediaManager, 
+        historyView
+    );
+
+    // 4. Configurar Eventos Globais (que não cabem apenas em uma View)
     const promptInput = document.getElementById('promptInput');
     const generateBtn = document.getElementById('generateBtn');
     const clearBtn = document.getElementById('clearBtn');
@@ -19,87 +36,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     MediaManager.init(updateClearBtn);
 
-    const handleClear = () => {
-        promptInput.value = '';
-        MediaManager.clear();
-        document.getElementById('output').style.display = 'none';
-        updateClearBtn();
-    };
-
-    const refreshHistory = () => HistoryUI.load((item) => {
-        ChatManager.displayConversation(item);
-        updateClearBtn();
-    }, handleClear);
-
-    // Eventos
+    // Eventos de UI
     promptInput.addEventListener('input', updateClearBtn);
-
-    generateBtn.addEventListener('click', () => ChatManager.sendPrompt(refreshHistory));
-    
     promptInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') generateBtn.click();
+        if (e.key === 'Enter') chatController.sendMessage();
     });
 
-    clearBtn.addEventListener('click', handleClear);
-
-    newChatBtn.addEventListener('click', async () => {
-        await AI.resetSession();
-        await clearAllHistory();
-        handleClear();
-        refreshHistory();
-        promptInput.placeholder = "Histórico limpo...";
-        setTimeout(() => promptInput.placeholder = "Pergunte alguma coisa", 2000);
+    generateBtn.addEventListener('click', () => chatController.sendMessage());
+    
+    clearBtn.addEventListener('click', () => {
+        chatController.view.setInputValue('');
+        chatController.view.clearOutput();
+        MediaManager.clear();
+        updateClearBtn();
     });
 
-    // Verificação de Suporte e Download
-    async function checkFullStatus() {
-        const status = await AI.checkDetailedStatus();
-        console.log("Status da IA:", status);
-        
-        ModalManager.hidePermission();
-        ModalManager.hideDownload();
-
-        if (status === "available") {
-            return true;
-        } else if (status === "downloadable" || status === "downloading") {
-            ModalManager.showDownload();
-            try {
-                // Inicia o download (create()) e monitora o progresso
-                await AI.getSession((loaded, total) => {
-                    ModalManager.updateDownloadProgress(loaded, total);
-                });
-                ModalManager.hideDownload();
-                return true;
-            } catch (err) {
-                console.error("Erro no download ou criação de sessão:", err);
-                ModalManager.hideDownload();
-                // Se falhou e ainda não está disponível, pode ser que precise de flags
-                if (err.message.includes("LanguageModel")) {
-                    ModalManager.showPermission();
-                }
-                return false;
-            }
-        } else {
-            // Status "unavailable"
-            ModalManager.showPermission();
-            return false;
-        }
-    }
+    newChatBtn.addEventListener('click', () => chatController.clearHistory());
 
     checkPermissionBtn.addEventListener('click', async () => {
         checkPermissionBtn.textContent = "Verificando...";
-        await new Promise(r => setTimeout(r, 600));
-        if (await checkFullStatus()) {
-            checkPermissionBtn.style.backgroundColor = "var(--primary)";
-            checkPermissionBtn.textContent = "Ativado!";
-            refreshHistory();
-        } else {
-            checkPermissionBtn.textContent = "Tente novamente";
-        }
+        await chatController.init();
+        checkPermissionBtn.textContent = "Tente novamente";
     });
 
-    // Carga Inicial
-    if (await checkFullStatus()) {
-        refreshHistory();
-    }
+    // Inicialização
+    await chatController.init();
 });

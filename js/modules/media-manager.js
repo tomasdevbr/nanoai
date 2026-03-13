@@ -37,27 +37,41 @@ const MediaManager = (() => {
         if (!isRecording) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
+                
+                // Escolhe um tipo suportado pelo navegador
+                const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+                                 ? 'audio/webm;codecs=opus' 
+                                 : 'audio/webm';
+                
+                mediaRecorder = new MediaRecorder(stream, { mimeType });
                 recordedChunks = [];
-                mediaRecorder.ondataavailable = e => e.data.size > 0 && recordedChunks.push(e.data);
+                
+                mediaRecorder.ondataavailable = e => {
+                    if (e.data.size > 0) recordedChunks.push(e.data);
+                };
+                
                 mediaRecorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-                    const file = new File([blob], `gravacao-${Date.now()}.webm`, { type: 'audio/webm' });
+                    const blob = new Blob(recordedChunks, { type: mimeType });
+                    const file = new File([blob], `gravacao-${Date.now()}.webm`, { type: mimeType });
                     selectedFiles.push(file);
                     renderPreview(file, onMediaChange);
                     mediaPreview.style.display = 'flex';
                     stream.getTracks().forEach(track => track.stop());
                     if (onMediaChange) onMediaChange();
                 };
+
                 mediaRecorder.start();
                 isRecording = true;
                 recordBtn.classList.add('recording');
                 document.getElementById('promptInput').placeholder = "Gravando áudio...";
             } catch (err) {
-                alert("Erro ao acessar microfone.");
+                console.error("MediaManager: Erro ao iniciar gravação", err);
+                alert("Erro ao acessar microfone. Verifique as permissões.");
             }
         } else {
-            mediaRecorder.stop();
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
             isRecording = false;
             recordBtn.classList.remove('recording');
             document.getElementById('promptInput').placeholder = "Pergunte alguma coisa";
