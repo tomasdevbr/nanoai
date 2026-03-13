@@ -2,13 +2,23 @@ const AI = (() => {
     let currentSession = null;
 
     async function checkDetailedStatus() {
+        // Suporte para diferentes versões da API (janela global ou window.ai)
+        const API = typeof LanguageModel !== 'undefined' ? LanguageModel : 
+                    (window.ai && window.ai.languageModel ? window.ai.languageModel : null);
+
+        if (!API) {
+            console.warn("Prompt API (LanguageModel) não encontrada no navegador.");
+            return "unavailable";
+        }
+        
         try {
-            const multimodalConfig = {
+            const status = await API.availability({
                 expectedInputs: [{ type: "text" }, { type: "image" }, { type: "audio" }]
-            };
-            return await LanguageModel.availability(multimodalConfig);
+            });
+            console.log("Status detalhado detectado:", status);
+            return status;
         } catch (error) {
-            console.error("Erro ao verificar status detalhado:", error);
+            console.error("Erro ao chamar API.availability:", error);
             return "unavailable";
         }
     }
@@ -20,6 +30,11 @@ const AI = (() => {
 
     async function getSession(onProgress) {
         if (currentSession) return currentSession;
+
+        const API = typeof LanguageModel !== 'undefined' ? LanguageModel : 
+                    (window.ai && window.ai.languageModel ? window.ai.languageModel : null);
+
+        if (!API) throw new Error("Prompt API (LanguageModel) não disponível.");
 
         const history = await getHistory();
         const recentHistory = history.slice(0, 5).reverse();
@@ -48,7 +63,7 @@ const AI = (() => {
                 };
             }
 
-            currentSession = await LanguageModel.create(options);
+            currentSession = await API.create(options);
             if (currentSession) return currentSession;
         } catch (error) {
             console.log(error);
@@ -105,5 +120,5 @@ const AI = (() => {
         }
     }
 
-    return { checkSupport, generateResponse, resetSession };
+    return { checkSupport, checkDetailedStatus, generateResponse, resetSession };
 })();

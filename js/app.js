@@ -54,24 +54,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Verificação de Suporte e Download
     async function checkFullStatus() {
         const status = await AI.checkDetailedStatus();
+        console.log("Status da IA:", status);
         
         ModalManager.hidePermission();
         ModalManager.hideDownload();
 
-        if (status === "readily") {
+        if (status === "available") {
             return true;
-        } else if (status === "after-download") {
+        } else if (status === "downloadable" || status === "downloading") {
             ModalManager.showDownload();
             try {
-                // Inicia o download e monitora o progresso
+                // Inicia o download (create()) e monitora o progresso
                 await AI.getSession((loaded, total) => {
                     ModalManager.updateDownloadProgress(loaded, total);
                 });
                 ModalManager.hideDownload();
                 return true;
             } catch (err) {
-                console.error("Erro no download:", err);
+                console.error("Erro no download ou criação de sessão:", err);
                 ModalManager.hideDownload();
+                // Se falhou e ainda não está disponível, pode ser que precise de flags
+                if (err.message.includes("LanguageModel")) {
+                    ModalManager.showPermission();
+                }
                 return false;
             }
         } else {
