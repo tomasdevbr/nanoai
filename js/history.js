@@ -34,7 +34,7 @@ const HistoryUI = (() => {
                 `;
 
                 div.querySelector('.history-item-content').addEventListener('click', () => {
-                    onLoadConversation(item.question, item.answer);
+                    onLoadConversation(item);
                 });
 
                 const deleteBtn = div.querySelector('.delete-history-btn');

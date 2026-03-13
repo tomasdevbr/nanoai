@@ -3,9 +3,19 @@ const AI = (() => {
 
     async function checkSupport() {
         try {
-            return await LanguageModel.availability();
+            // Tenta verificar suporte multimodal completo primeiro
+            const multimodalConfig = {
+                expectedInputs: [
+                    { type: "text" },
+                    { type: "image" },
+                    { type: "audio" }
+                ]
+            };
+            const multimodalAvailability = await LanguageModel.availability(multimodalConfig);
+
+            if (multimodalAvailability !== "unavailable") return true;
         } catch (error) {
-            console.error(error);
+            console.error("Erro ao verificar suporte:", error);
             return false;
         }
     }
@@ -13,28 +23,28 @@ const AI = (() => {
     async function getSession() {
         if (currentSession) return currentSession;
 
-        // Recuperar as últimas 5 conversas do banco para dar contexto
         const history = await getHistory();
         const recentHistory = history.slice(0, 5).reverse();
-        
+
         const initialPrompts = [
             { role: 'system', content: `Você é um assistente de IA que responde de forma clara e objetiva. Lembre-se do contexto das conversas anteriores para ajudar melhor o usuário.` }
         ];
 
-        // Adicionar histórico recente aos prompts iniciais
         recentHistory.forEach(item => {
             initialPrompts.push({ role: 'user', content: item.question });
             initialPrompts.push({ role: 'assistant', content: item.answer });
         });
 
-        currentSession = await LanguageModel.create({
-            expectedInputLanguages: ["pt"],
-            temperature: 0.8,
-            topK: 3,
-            initialPrompts: initialPrompts
-        });
-
-        return currentSession;
+        try {
+            currentSession = await LanguageModel.create({
+                expectedInputs: [{ type: "text" }, { type: "image" }, { type: "audio" }],
+                temperature: 0.8, topK: 3, initialPrompts
+            });
+            if (currentSession) return currentSession;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
     }
 
     async function resetSession() {
@@ -44,16 +54,46 @@ const AI = (() => {
         }
     }
 
-    async function generateResponse(question, onTokenCb) {
+    /**
+     * @param {string|Array} inputContent - Texto ou array de partes [{type: 'text', value: '...'}, {type: 'image', value: blob}]
+     */
+    async function generateResponse(inputContent, onTokenCb) {
         const session = await getSession();
 
-        const responseStream = await session.promptStreaming([{ role: 'user', content: question }]);
-        let fullText = "";
-        for await (const token of responseStream) {
-            fullText += token;
-            onTokenCb(fullText);
+        // Determinar quais tipos o modelo suporta com base na sessão
+        // Infelizmente a API ainda não expõe isso claramente, então vamos tentar ser inteligentes
+        // e usar 'data' para imagens/áudio que é mais comum em versões recentes.
+
+        let content;
+        if (typeof inputContent === 'string') {
+            content = [{ type: 'text', value: inputContent }];
+        } else {
+            // Se for array de partes, garantir que os campos estão corretos e filtrar se necessário
+            content = inputContent.map(part => {
+                if (part.type === 'text') return part;
+
+                // Para imagem/áudio, incluímos mimeType e usamos 'data'
+                return {
+                    type: part.type,
+                    data: part.value,
+                    value: part.value, // Backup
+                    mimeType: part.value.type // O Blob/File já tem a propriedade type
+                };
+            });
         }
-        return fullText;
+
+        try {
+            const responseStream = await session.promptStreaming([{ role: 'user', content: content }]);
+            let fullText = "";
+            for await (const token of responseStream) {
+                fullText += token;
+                onTokenCb(fullText);
+            }
+            return fullText;
+        } catch (error) {
+            console.log(error)
+            throw error;
+        }
     }
 
     return { checkSupport, generateResponse, resetSession };

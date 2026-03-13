@@ -31,7 +31,7 @@ async function initDB() {
 }
 
 // Função para salvar uma conversa (pergunta e resposta)
-async function saveConversation(question, answer) {
+async function saveConversation(question, answer, mediaFiles = []) {
     if (!db) await initDB();
     
     return new Promise((resolve, reject) => {
@@ -41,6 +41,7 @@ async function saveConversation(question, answer) {
         const record = {
             question: question,
             answer: answer,
+            mediaFiles: mediaFiles, // Blobs são suportados nativamente pelo IndexedDB
             timestamp: new Date().getTime()
         };
 
