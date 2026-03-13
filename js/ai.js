@@ -1,9 +1,9 @@
 const AI = (() => {
     async function checkSupport() {
         try {
-            const availability = await LanguageModel.availability();
-            return availability;
+            return await LanguageModel.availability();
         } catch (error) {
+            console.error(error);
             return false;
         }
     }
