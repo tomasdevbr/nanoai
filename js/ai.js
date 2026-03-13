@@ -1,26 +1,24 @@
 const AI = (() => {
     let currentSession = null;
 
-    async function checkSupport() {
+    async function checkDetailedStatus() {
         try {
-            // Tenta verificar suporte multimodal completo primeiro
             const multimodalConfig = {
-                expectedInputs: [
-                    { type: "text" },
-                    { type: "image" },
-                    { type: "audio" }
-                ]
+                expectedInputs: [{ type: "text" }, { type: "image" }, { type: "audio" }]
             };
-            const multimodalAvailability = await LanguageModel.availability(multimodalConfig);
-
-            if (multimodalAvailability !== "unavailable") return true;
+            return await LanguageModel.availability(multimodalConfig);
         } catch (error) {
-            console.error("Erro ao verificar suporte:", error);
-            return false;
+            console.error("Erro ao verificar status detalhado:", error);
+            return "unavailable";
         }
     }
 
-    async function getSession() {
+    async function checkSupport() {
+        const status = await checkDetailedStatus();
+        return status !== "unavailable";
+    }
+
+    async function getSession(onProgress) {
         if (currentSession) return currentSession;
 
         const history = await getHistory();
@@ -36,10 +34,21 @@ const AI = (() => {
         });
 
         try {
-            currentSession = await LanguageModel.create({
+            const options = {
                 expectedInputs: [{ type: "text" }, { type: "image" }, { type: "audio" }],
                 temperature: 0.8, topK: 3, initialPrompts
-            });
+            };
+
+            // Se um callback de progresso foi fornecido, usamos o monitor
+            if (onProgress) {
+                options.monitor = (m) => {
+                    m.addEventListener('downloadprogress', (e) => {
+                        onProgress(e.loaded, e.total);
+                    });
+                };
+            }
+
+            currentSession = await LanguageModel.create(options);
             if (currentSession) return currentSession;
         } catch (error) {
             console.log(error);

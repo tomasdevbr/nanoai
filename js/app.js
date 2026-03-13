@@ -51,13 +51,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(() => promptInput.placeholder = "Pergunte alguma coisa", 2000);
     });
 
-    // Verificação de Suporte
-    async function checkSupport() {
-        const supported = await AI.checkSupport();
-        if (supported) {
-            ModalManager.hidePermission();
+    // Verificação de Suporte e Download
+    async function checkFullStatus() {
+        const status = await AI.checkDetailedStatus();
+        
+        ModalManager.hidePermission();
+        ModalManager.hideDownload();
+
+        if (status === "readily") {
             return true;
+        } else if (status === "after-download") {
+            ModalManager.showDownload();
+            try {
+                // Inicia o download e monitora o progresso
+                await AI.getSession((loaded, total) => {
+                    ModalManager.updateDownloadProgress(loaded, total);
+                });
+                ModalManager.hideDownload();
+                return true;
+            } catch (err) {
+                console.error("Erro no download:", err);
+                ModalManager.hideDownload();
+                return false;
+            }
         } else {
+            // Status "unavailable"
             ModalManager.showPermission();
             return false;
         }
@@ -66,15 +84,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     checkPermissionBtn.addEventListener('click', async () => {
         checkPermissionBtn.textContent = "Verificando...";
         await new Promise(r => setTimeout(r, 600));
-        if (await checkSupport()) {
+        if (await checkFullStatus()) {
             checkPermissionBtn.style.backgroundColor = "var(--primary)";
             checkPermissionBtn.textContent = "Ativado!";
+            refreshHistory();
         } else {
             checkPermissionBtn.textContent = "Tente novamente";
         }
     });
 
     // Carga Inicial
-    await checkSupport();
-    refreshHistory();
+    if (await checkFullStatus()) {
+        refreshHistory();
+    }
 });

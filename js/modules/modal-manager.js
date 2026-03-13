@@ -6,6 +6,9 @@ const ModalManager = (() => {
     const modalImage = document.getElementById('modalImage');
     const closeImageModal = document.getElementById('closeImageModal');
     const permissionModal = document.getElementById('permissionModal');
+    const downloadModal = document.getElementById('downloadModal');
+    const progressBar = document.getElementById('downloadProgressBar');
+    const downloadStatus = document.getElementById('downloadStatus');
 
     function init() {
         if (closeImageModal) closeImageModal.onclick = () => hideImage();
@@ -31,5 +34,21 @@ const ModalManager = (() => {
         permissionModal.style.display = 'none';
     }
 
-    return { init, showImage, showPermission, hidePermission };
+    function showDownload() {
+        downloadModal.style.display = 'flex';
+    }
+
+    function hideDownload() {
+        downloadModal.style.display = 'none';
+    }
+
+    function updateDownloadProgress(loaded, total) {
+        const percent = Math.round((loaded / total) * 100);
+        progressBar.style.width = `${percent}%`;
+        const loadedMB = (loaded / (1024 * 1024)).toFixed(1);
+        const totalMB = (total / (1024 * 1024)).toFixed(1);
+        downloadStatus.textContent = `Baixando AI: ${percent}% (${loadedMB}/${totalMB} MB)`;
+    }
+
+    return { init, showImage, showPermission, hidePermission, showDownload, hideDownload, updateDownloadProgress };
 })();

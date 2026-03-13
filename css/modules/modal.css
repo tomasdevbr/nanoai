@@ -56,3 +56,30 @@
 }
 
 .close-modal-btn:hover { background-color: #ffb3f0; }
+
+/* Progress Bar Neobrutalista */
+.progress-wrapper {
+    width: 100%;
+    height: 30px;
+    background-color: var(--white);
+    border: var(--border-width) solid var(--black);
+    border-radius: 4px;
+    margin: 20px 0;
+    overflow: hidden;
+    box-shadow: 4px 4px 0px var(--black);
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background-color: var(--primary);
+    transition: width 0.3s ease;
+    border-right: var(--border-width) solid var(--black);
+}
+
+#downloadStatus {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--black);
+    text-transform: uppercase;
+}
