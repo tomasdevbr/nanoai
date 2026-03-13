@@ -2,15 +2,23 @@
  * ChatController - Orquestra a lógica entre os serviços e a UI.
  */
 class ChatController {
-    constructor(aiService, repository, chatView, mediaManager, historyView) {
+    constructor(aiService, repository, chatView, mediaManager, historyView, settingsView) {
         this.aiService = aiService;
         this.repository = repository;
         this.view = chatView;
         this.mediaManager = mediaManager;
         this.historyView = historyView;
+        this.settingsView = settingsView;
     }
 
     async init() {
+        // Inicializar configurações
+        const initialSettings = await this.aiService.getSettings();
+        this.settingsView.setSettings(initialSettings);
+        
+        this.settingsView.onSettingsChange(async (newSettings) => {
+            await this.aiService.updateSettings(newSettings);
+        });
         const status = await this.aiService.checkAvailability();
         console.log("ChatController: Status da IA", status);
 

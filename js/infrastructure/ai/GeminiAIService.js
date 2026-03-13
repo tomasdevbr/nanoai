@@ -5,6 +5,11 @@ class GeminiAIService extends AIService {
     constructor() {
         super();
         this.currentSession = null;
+        this.settings = {
+            temperature: 0.8,
+            topK: 3,
+            systemPrompt: 'Você é um assistente de IA prestativo.'
+        };
     }
 
     async getAPI() {
@@ -35,9 +40,9 @@ class GeminiAIService extends AIService {
         try {
             const options = {
                 expectedInputs: [{ type: "text" }, { type: "image" }, { type: "audio" }],
-                temperature: 0.8,
-                topK: 3,
-                initialPrompts: [{ role: 'system', content: 'Você é um assistente de IA prestativo.' }]
+                temperature: this.settings.temperature,
+                topK: this.settings.topK,
+                initialPrompts: [{ role: 'system', content: this.settings.systemPrompt }]
             };
 
             if (onProgress) {
@@ -86,5 +91,22 @@ class GeminiAIService extends AIService {
             this.currentSession.destroy();
             this.currentSession = null;
         }
+    }
+
+    async updateSettings(settings) {
+        const hasChanged = 
+            settings.temperature !== this.settings.temperature ||
+            settings.topK !== this.settings.topK ||
+            settings.systemPrompt !== this.settings.systemPrompt;
+
+        this.settings = { ...this.settings, ...settings };
+        
+        if (hasChanged) {
+            await this.resetSession();
+        }
+    }
+
+    async getSettings() {
+        return { ...this.settings };
     }
 }

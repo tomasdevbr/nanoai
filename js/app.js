@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. Instanciar Views
     const chatView = new ChatView();
     const historyView = new HistoryView();
+    const settingsView = new SettingsView();
     // ModalManager permanece como singleton por simplicidade no DOM
     ModalManager.init();
     
@@ -18,7 +19,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         historyRepo, 
         chatView, 
         MediaManager, 
-        historyView
+        historyView,
+        settingsView
     );
 
     // 4. Configurar Eventos Globais (que não cabem apenas em uma View)

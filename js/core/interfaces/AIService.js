@@ -15,6 +15,14 @@ class AIService {
         throw new Error("Método resetSession deve ser implementado.");
     }
 
+    async updateSettings(settings) {
+        throw new Error("Método updateSettings deve ser implementado.");
+    }
+
+    async getSettings() {
+        throw new Error("Método getSettings deve ser implementado.");
+    }
+
     async getSession(onProgress) {
         throw new Error("Método getSession deve ser implementado.");
     }
