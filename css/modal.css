@@ -91,3 +91,40 @@
     box-shadow: 0px 0px 0px var(--black);
 }
 
+.requirements-box {
+    background-color: var(--white);
+    border: 2px solid var(--black);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-bottom: 25px;
+    text-align: left;
+    box-shadow: 4px 4px 0px var(--black);
+}
+
+.requirements-box h3 {
+    margin-top: 0;
+    font-size: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--black);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.requirements-box ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.requirements-box li {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.requirements-box strong {
+    color: var(--black);
+}
+

@@ -14,7 +14,6 @@ class GeminiAIService extends AIService {
 
     async checkAvailability() {
         const API = await this.getAPI();
-        debugger
         if (!API) return "unavailable";
 
         try {
